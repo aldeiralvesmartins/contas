@@ -59,11 +59,18 @@
                         <input type="date"
                                name="due_date"
                                required
-                               min="{{ date('Y-m-d') }}"
                                class="input-primary">
                     </div>
                 </div>
-
+                <div>
+                    <label class="block text-sm font-medium text-slate-700 mb-2">
+                        Status
+                    </label>
+                    <select name="status" class="input-primary">
+                        <option value="pending">Pendente</option>
+                        <option value="paid">Pago</option>
+                    </select>
+                </div>
                 <!-- Categoria -->
                 <div>
                     <label class="block text-sm font-medium text-slate-700 mb-2">
