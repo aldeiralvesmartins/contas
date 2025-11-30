@@ -6,7 +6,7 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
-    protected $fillable = ['description', 'amount', 'category_id', 'type'];
+    protected $fillable = ['description', 'amount', 'category_id', 'type','status', 'due_date', 'paid_at'];
 
     public function category() {
         return $this->belongsTo(Category::class);

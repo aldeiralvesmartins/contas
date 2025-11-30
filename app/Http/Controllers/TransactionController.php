@@ -139,4 +139,21 @@ class TransactionController extends Controller
 
         return $cleanDescription . ' (Cópia)';
     }
+
+    // TransactionController.php
+    public function markPaid($id)
+    {
+        $transaction = Transaction::findOrFail($id);
+        $transaction->update(['status' => 'paid']);
+
+        return redirect()->back()->with('success', 'Transação marcada como paga!');
+    }
+
+    public function markPending($id)
+    {
+        $transaction = Transaction::findOrFail($id);
+        $transaction->update(['status' => 'pending']);
+
+        return redirect()->back()->with('success', 'Transação marcada como pendente!');
+    }
 }

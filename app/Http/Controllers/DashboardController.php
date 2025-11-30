@@ -12,147 +12,208 @@ class DashboardController extends Controller
 {
     public function index()
     {
-        // TRANSACTIONS - Entradas e Saídas
-        $total_income_transactions = Transaction::where('type', 'income')->sum('amount') ?? 0;
-        $total_expense_transactions = Transaction::where('type', 'expense')->sum('amount') ?? 0;
+        $today = Carbon::today();
 
-        // ACCOUNTS - Usando a relação com category para determinar o tipo
-        // Contas pagas (já realizadas)
-        $paid_accounts = Account::with('category')
+        /*
+        |--------------------------------------------------------------------------
+        | DADOS PRINCIPAIS - OTIMIZADOS
+        |--------------------------------------------------------------------------
+        */
+
+        // Total geral de transações (independente do status)
+        $totalTransactions = [
+            'income' => Transaction::where('type', 'income')->sum('amount') ?? 0,
+            'expense' => Transaction::where('type', 'expense')->sum('amount') ?? 0,
+        ];
+
+        // Transações por status
+        $transactionsByStatus = [
+            'paid' => [
+                'income' => Transaction::where('type', 'income')->where('status', 'paid')->sum('amount'),
+                'expense' => Transaction::where('type', 'expense')->where('status', 'paid')->sum('amount'),
+            ],
+            'pending' => [
+                'income' => Transaction::where('type', 'income')->where('status', 'pending')->sum('amount'),
+                'expense' => Transaction::where('type', 'expense')->where('status', 'pending')->sum('amount'),
+            ]
+        ];
+
+        // Contas vencidas
+        $overdueTransactions = Transaction::where('status', 'pending')
+            ->whereNotNull('due_date')
+            ->whereDate('due_date', '<', $today)
+            ->get();
+
+        $lateTransactions = [
+            'income' => $overdueTransactions->where('type', 'income')->count(),
+            'expense' => $overdueTransactions->where('type', 'expense')->count(),
+            'total' => $overdueTransactions->count()
+        ];
+
+        /*
+        |--------------------------------------------------------------------------
+        | ACCOUNTS - OTIMIZADO
+        |--------------------------------------------------------------------------
+        */
+
+        // Contas pagas
+        $paidAccounts = Account::with('category')
             ->where('status', 'paid')
             ->get();
 
-        $total_income_accounts = $paid_accounts->filter(function($account) {
-            return $account->category->type === 'income';
-        })->sum('amount');
+        $accountsPaid = [
+            'income' => $paidAccounts->filter(fn($a) => $a->category->type === 'income')->sum('amount'),
+            'expense' => $paidAccounts->filter(fn($a) => $a->category->type === 'expense')->sum('amount'),
+        ];
 
-        $total_expense_accounts = $paid_accounts->filter(function($account) {
-            return $account->category->type === 'expense';
-        })->sum('amount');
-
-        // TOTAIS GERAIS (transactions + accounts pagas)
-        $total_income = $total_income_transactions + $total_income_accounts;
-        $total_expense = $total_expense_transactions + $total_expense_accounts;
-        $balance = $total_income - $total_expense;
-
-        // CONTAS PENDENTES (separadas por tipo via categoria)
-        $pending_accounts = Account::with('category')
+        // Contas pendentes
+        $pendingAccounts = Account::with('category')
             ->where('status', 'pending')
             ->get();
 
-        $pending_income_accounts = $pending_accounts->filter(function($account) {
-            return $account->category->type === 'income';
-        });
+        $accountsPending = [
+            'count' => [
+                'income' => $pendingAccounts->filter(fn($a) => $a->category->type === 'income')->count(),
+                'expense' => $pendingAccounts->filter(fn($a) => $a->category->type === 'expense')->count(),
+            ],
+            'amount' => [
+                'income' => $pendingAccounts->filter(fn($a) => $a->category->type === 'income')->sum('amount'),
+                'expense' => $pendingAccounts->filter(fn($a) => $a->category->type === 'expense')->sum('amount'),
+            ]
+        ];
 
-        $pending_expense_accounts = $pending_accounts->filter(function($account) {
-            return $account->category->type === 'expense';
-        });
-
-        $pending_income_bills = $pending_income_accounts->count();
-        $pending_expense_bills = $pending_expense_accounts->count();
-        $pending_bills = $pending_income_bills + $pending_expense_bills;
-
-        // VALORES PENDENTES
-        $pending_income_amount = $pending_income_accounts->sum('amount');
-        $pending_expense_amount = $pending_expense_accounts->sum('amount');
-
-        // CONTAS VENCIDAS
-        $overdue_accounts = Account::with('category')
+        // Contas vencidas
+        $overdueAccounts = Account::with('category')
             ->where('status', 'pending')
-            ->whereDate('due_date', '<', Carbon::today())
+            ->whereDate('due_date', '<', $today)
             ->get();
 
-        $late_income_bills = $overdue_accounts->filter(function($account) {
-            return $account->category->type === 'income';
-        })->count();
+        $accountsOverdue = [
+            'income' => $overdueAccounts->filter(fn($a) => $a->category->type === 'income')->count(),
+            'expense' => $overdueAccounts->filter(fn($a) => $a->category->type === 'expense')->count(),
+        ];
 
-        $late_expense_bills = $overdue_accounts->filter(function($account) {
-            return $account->category->type === 'expense';
-        })->count();
+        /*
+        |--------------------------------------------------------------------------
+        | TOTAIS CONSOLIDADOS
+        |--------------------------------------------------------------------------
+        */
+        $totals = [
+            'income' => $totalTransactions['income'] + $accountsPaid['income'],
+            'expense' => $totalTransactions['expense'] + $accountsPaid['expense'],
+        ];
 
-        $late_bills = $late_income_bills + $late_expense_bills;
+        $totals['balance'] = $totals['income'] - $totals['expense'];
 
-        // Contas pendentes recentes (próximos 7 dias)
-        $upcoming_bills = Account::with('category')
-            ->where('status', 'pending')
-            ->whereBetween('due_date', [Carbon::today(), Carbon::today()->addDays(7)])
-            ->orderBy('due_date')
-            ->take(6)
-            ->get();
+        // Pendências consolidadas
+        $pendingTotals = [
+            'count' => $accountsPending['count']['income'] + $accountsPending['count']['expense'],
+            'amount' => [
+                'income' => $accountsPending['amount']['income'] + $transactionsByStatus['pending']['income'],
+                'expense' => $accountsPending['amount']['expense'] + $transactionsByStatus['pending']['expense'],
+            ]
+        ];
 
-        // Contas vencidas para display
-        $overdue_bills = Account::with('category')
-            ->where('status', 'pending')
-            ->whereDate('due_date', '<', Carbon::today())
-            ->orderBy('due_date')
-            ->take(5)
-            ->get();
+        // Vencidos consolidados
+        $overdueTotals = [
+            'count' => $accountsOverdue['income'] + $accountsOverdue['expense'] + $lateTransactions['total'],
+            'accounts' => $accountsOverdue['income'] + $accountsOverdue['expense'],
+            'transactions' => $lateTransactions['total']
+        ];
 
-        // Últimas transações
-        $recent_transactions = Transaction::with('category')
-            ->latest()
-            ->take(6)
-            ->get();
+        /*
+        |--------------------------------------------------------------------------
+        | LISTAS PARA EXIBIÇÃO
+        |--------------------------------------------------------------------------
+        */
+        $displayData = [
+            'upcoming_bills' => Account::with('category')
+                ->where('status', 'pending')
+                ->whereBetween('due_date', [$today, $today->copy()->addDays(7)])
+                ->orderBy('due_date')
+                ->take(6)
+                ->get(),
 
-        // Últimas contas
-        $recent_accounts = Account::with('category')
-            ->latest()
-            ->take(4)
-            ->get();
+            'overdue_bills' => Account::with('category')
+                ->where('status', 'pending')
+                ->whereDate('due_date', '<', $today)
+                ->orderBy('due_date')
+                ->take(5)
+                ->get(),
 
-        // Estatísticas por categoria
-        $category_stats = Category::withCount(['transactions', 'accounts'])
-            ->withSum(['transactions as transactions_total'], 'amount')
-            ->withSum(['accounts as accounts_total'], 'amount')
-            ->get();
+            'recent_transactions' => Transaction::with('category')
+                ->latest()
+                ->take(6)
+                ->get(),
 
-        // Transações do mês atual
-        $current_month_income = Transaction::where('type', 'income')
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->sum('amount');
+            'recent_accounts' => Account::with('category')
+                ->latest()
+                ->take(4)
+                ->get(),
+        ];
 
-        $current_month_expense = Transaction::where('type', 'expense')
-            ->whereMonth('created_at', Carbon::now()->month)
-            ->whereYear('created_at', Carbon::now()->year)
-            ->sum('amount');
+        /*
+        |--------------------------------------------------------------------------
+        | ESTATÍSTICAS ADICIONAIS
+        |--------------------------------------------------------------------------
+        */
+        $stats = [
+            'category_stats' => Category::withCount(['transactions', 'accounts'])
+                ->withSum(['transactions as transactions_total'], 'amount')
+                ->withSum(['accounts as accounts_total'], 'amount')
+                ->get(),
 
-        // Tendência vs mês anterior
-        $last_month_income = Transaction::where('type', 'income')
-            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
-            ->whereYear('created_at', Carbon::now()->subMonth()->year)
-            ->sum('amount');
+            'monthly_comparison' => $this->getMonthlyComparison(),
+        ];
 
-        $last_month_expense = Transaction::where('type', 'expense')
-            ->whereMonth('created_at', Carbon::now()->subMonth()->month)
-            ->whereYear('created_at', Carbon::now()->subMonth()->year)
-            ->sum('amount');
-
-        $income_trend = $last_month_income > 0 ?
-            (($current_month_income - $last_month_income) / $last_month_income) * 100 : 0;
-
-        $expense_trend = $last_month_expense > 0 ?
-            (($current_month_expense - $last_month_expense) / $last_month_expense) * 100 : 0;
-
-        return view('dashboard', compact(
-            'total_income',
-            'total_expense',
-            'balance',
-            'pending_bills',
-            'pending_income_bills',
-            'pending_expense_bills',
-            'late_bills',
-            'pending_income_amount',
-            'pending_expense_amount',
-            'upcoming_bills',
-            'overdue_bills',
-            'recent_transactions',
-            'recent_accounts',
-            'category_stats',
-            'current_month_income',
-            'current_month_expense',
-            'income_trend',
-            'expense_trend'
+        return view('dashboard', array_merge(
+            $totals,
+            $pendingTotals,
+            ['overdue_totals' => $overdueTotals],
+            $displayData,
+            $stats,
+            [
+                'transactions_by_status' => $transactionsByStatus,
+                'accounts_pending' => $accountsPending,
+                'accounts_overdue' => $accountsOverdue,
+            ]
         ));
+    }
+
+    private function getMonthlyComparison()
+    {
+        $currentMonth = Carbon::now();
+        $lastMonth = Carbon::now()->subMonth();
+
+        $current = [
+            'income' => Transaction::where('type', 'income')
+                ->whereMonth('created_at', $currentMonth->month)
+                ->whereYear('created_at', $currentMonth->year)
+                ->sum('amount'),
+            'expense' => Transaction::where('type', 'expense')
+                ->whereMonth('created_at', $currentMonth->month)
+                ->whereYear('created_at', $currentMonth->year)
+                ->sum('amount'),
+        ];
+
+        $last = [
+            'income' => Transaction::where('type', 'income')
+                ->whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->sum('amount'),
+            'expense' => Transaction::where('type', 'expense')
+                ->whereMonth('created_at', $lastMonth->month)
+                ->whereYear('created_at', $lastMonth->year)
+                ->sum('amount'),
+        ];
+
+        return [
+            'current' => $current,
+            'last' => $last,
+            'trend' => [
+                'income' => $last['income'] > 0 ? (($current['income'] - $last['income']) / $last['income']) * 100 : 0,
+                'expense' => $last['expense'] > 0 ? (($current['expense'] - $last['expense']) / $last['expense']) * 100 : 0,
+            ]
+        ];
     }
 }
