@@ -15,7 +15,17 @@
             </h2>
             <p class="text-slate-600 mt-2">Registre uma nova entrada ou saída</p>
         </div>
-
+        <div class="fixed bottom-6 left-6 z-50">
+            <button type="button"
+                    id="voice-btn"
+                    class="w-16 h-16 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-full shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-300 flex items-center justify-center group">
+                <div class="relative">
+                    <span class="text-2xl">🎤</span>
+                    <div class="absolute -top-1 -left-1 w-3 h-3 bg-red-500 rounded-full animate-pulse hidden" id="recording-indicator"></div>
+                </div>
+            </button>
+        </div>
+        <p id="voice-status" class="text-sm text-slate-500 mt-2"></p>
         <div class="card p-8">
             <form action="{{ route('transactions.store') }}" method="POST" class="space-y-6" data-validate>
                 @csrf
@@ -147,4 +157,137 @@
             filterCategories(); // Initial filter
         });
     </script>
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+
+            const btn = document.getElementById('voice-btn');
+            const status = document.getElementById('voice-status');
+
+            const description = document.querySelector('input[name="description"]');
+            const amount = document.querySelector('input[name="amount"]');
+            const type = document.getElementById('transaction-type');
+            const category = document.getElementById('category-select');
+            const dateInput = document.querySelector('input[name="transaction_date"]');
+
+            // Categorias do banco (adicionei description também)
+            const categories = [
+                    @foreach($categories as $c)
+                { id: {{ $c->id }}, name: "{{ strtolower($c->name) }}", type: "{{ $c->type }}", description: "{{ strtolower($c->description) }}" },
+                @endforeach
+            ];
+
+            if (!("webkitSpeechRecognition" in window)) {
+                btn.disabled = true;
+                status.textContent = "Seu navegador não suporta reconhecimento de voz.";
+                return;
+            }
+
+            const recognition = new webkitSpeechRecognition();
+            recognition.lang = "pt-BR";
+            recognition.continuous = false;
+            recognition.interimResults = false;
+
+            btn.onclick = () => {
+                recognition.start();
+                status.textContent = "🎤 Ouvindo... fale a transação.";
+            };
+
+            recognition.onresult = (event) => {
+                const text = event.results[0][0].transcript.toLowerCase();
+                status.textContent = "Você disse: " + text;
+
+                // ============================
+                //  DEFINIR TIPO (entrada/saída)
+                // ============================
+                if (text.includes("entrada") || text.includes("recebi") || text.includes("ganhei")) {
+                    type.value = "income";
+                } else if (text.includes("saída") || text.includes("gastei") || text.includes("paguei")) {
+                    type.value = "expense";
+                }
+
+                const selectedType = type.value;
+
+                // ============================
+                //  PEGAR VALOR
+                // ============================
+                const valor = text.match(/(\d+[,\.]?\d*)/);
+                if (valor) {
+                    let v = valor[1].replace(",", ".");
+                    amount.value = parseFloat(v);
+                }
+
+                // ============================
+                //  SELECIONAR CATEGORIA AUTOMÁTICA
+                // ============================
+                let possibleCategories = categories.filter(c => c.type === selectedType);
+                let chosenCategory = null;
+
+                // 1 — Match por nome ou descrição
+                for (let c of possibleCategories) {
+                    if (text.includes(c.name) || text.includes(c.description)) {
+                        chosenCategory = c;
+                        break;
+                    }
+                }
+
+                // 2 — Match por palavras
+                if (!chosenCategory) {
+                    for (let c of possibleCategories) {
+                        let words = (c.name + " " + c.description).split(" ");
+                        for (let w of words) {
+                            if (w.length > 3 && text.includes(w)) {
+                                chosenCategory = c;
+                                break;
+                            }
+                        }
+                        if (chosenCategory) break;
+                    }
+                }
+
+                // 3 — Se ainda não achou, seleciona a primeira válida do tipo
+                if (!chosenCategory && possibleCategories.length > 0) {
+                    chosenCategory = possibleCategories[0];
+                }
+
+                if (chosenCategory) {
+                    category.value = chosenCategory.id;
+                }
+
+                // ============================
+                //  DEFINIR A DATA ATUAL SE NÃO FALAR NENHUMA DATA
+                // ============================
+                const dataRegex = /(dia\s+\d{1,2})|(hoje)|(ontem)|(amanhã)/;
+
+                if (dataRegex.test(text)) {
+                    const now = new Date();
+                    if (text.includes("hoje")) dateInput.value = now.toISOString().slice(0,16);
+                    if (text.includes("ontem")) { now.setDate(now.getDate()-1); dateInput.value = now.toISOString().slice(0,16); }
+                    if (text.includes("amanhã")) { now.setDate(now.getDate()+1); dateInput.value = now.toISOString().slice(0,16); }
+
+                    const diaMatch = text.match(/dia\s+(\d{1,2})/);
+                    if (diaMatch) {
+                        const day = parseInt(diaMatch[1]);
+                        const fixed = new Date();
+                        fixed.setDate(day);
+                        dateInput.value = fixed.toISOString().slice(0,16);
+                    }
+                } else {
+                    const now = new Date();
+                    dateInput.value = now.toISOString().slice(0,16);
+                }
+
+                // ============================
+                //  PREENCHER DESCRIÇÃO
+                // ============================
+                description.value = text.charAt(0).toUpperCase() + text.slice(1);
+            };
+
+            recognition.onerror = (e) => {
+                status.textContent = "Erro: " + e.error;
+            };
+        });
+    </script>
+
+
+
 @endsection
