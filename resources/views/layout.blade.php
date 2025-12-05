@@ -19,15 +19,19 @@
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex justify-between items-center h-16">
             <!-- Logo -->
-            <div class="flex items-center space-x-3">
-                <div class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
-                    <span class="text-white font-bold text-lg">💰</span>
-                </div>
-                <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
-                    FinanceControl
-                </h1>
-            </div>
+            <a href="/">
+                <div class="flex items-center space-x-3">
 
+                    <div
+                        class="w-10 h-10 bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl flex items-center justify-center shadow-lg">
+                        <span class="text-white font-bold text-lg">💰</span>
+                    </div>
+                    <h1 class="text-2xl font-bold bg-gradient-to-r from-slate-800 to-slate-600 bg-clip-text text-transparent">
+                        FinanceControl
+                    </h1>
+
+                </div>
+            </a>
             <!-- Navigation Links -->
             <div class="hidden md:flex items-center space-x-1">
                 <a href="{{ route('dashboard') }}"
@@ -64,19 +68,23 @@
     <!-- Mobile Menu -->
     <div class="md:hidden hidden bg-white border-t border-slate-200" id="mobile-menu">
         <div class="px-4 py-2 space-y-1">
-            <a href="{{ route('dashboard') }}" class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
+            <a href="{{ route('dashboard') }}"
+               class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
                 <span>📊</span>
                 <span>Dashboard</span>
             </a>
-            <a href="{{ route('accounts.index') }}" class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
+            <a href="{{ route('accounts.index') }}"
+               class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
                 <span>📄</span>
                 <span>Contas</span>
             </a>
-            <a href="{{ route('transactions.index') }}" class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
+            <a href="{{ route('transactions.index') }}"
+               class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
                 <span>💸</span>
                 <span>Transações</span>
             </a>
-            <a href="{{ route('categories.index') }}" class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
+            <a href="{{ route('categories.index') }}"
+               class="block px-3 py-2 rounded-lg font-medium text-slate-600 hover:text-blue-600 hover:bg-blue-50 transition-all duration-200 flex items-center space-x-2">
                 <span>🏷️</span>
                 <span>Categorias</span>
             </a>
@@ -100,7 +108,7 @@
 
 <script>
     // Mobile menu toggle
-    document.getElementById('mobile-menu-button')?.addEventListener('click', function() {
+    document.getElementById('mobile-menu-button')?.addEventListener('click', function () {
         const menu = document.getElementById('mobile-menu');
         menu.classList.toggle('hidden');
     });
