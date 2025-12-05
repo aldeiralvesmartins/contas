@@ -223,7 +223,7 @@
                                                 {{ $transaction->type === 'income' ? '+' : '-' }}R$ {{ number_format($transaction->amount, 2, ',', '.') }}
                                             </p>
                                             <span class="text-xs text-slate-500">
-                                                {{ $transaction->created_at->format('d/m H:i') }}
+                                                {{ $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->format('d/m/Y') : $transaction->created_at->format('d/m H:i') }}
                                             </span>
                                         </div>
                                     </div>

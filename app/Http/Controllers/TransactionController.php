@@ -32,17 +32,24 @@ class TransactionController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'type' => 'required|in:income,expense',
             'category_id' => 'required|exists:categories,id',
-            'transaction_date' => 'nullable|date',
+            'transaction_date' => 'required|date',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        // Se foi informada uma data específica, usar ela
-        if ($request->filled('transaction_date')) {
-            $validated['created_at'] = $request->transaction_date;
-            $validated['updated_at'] = $request->transaction_date;
-        }
+        // Converter a data do formato datetime-local para timestamp
+        $transactionDate = \Carbon\Carbon::parse($validated['transaction_date']);
 
-        Transaction::create($validated);
+        // Criar a transação
+        Transaction::create([
+            'description' => $validated['description'],
+            'amount' => $validated['amount'],
+            'type' => $validated['type'],
+            'category_id' => $validated['category_id'],
+            'transaction_date' => $transactionDate,
+            'notes' => $validated['notes'],
+            'created_at' => now(),
+            'updated_at' => now(),
+        ]);
 
         return redirect()->route('transactions.index')
             ->with('success', 'Transação criada com sucesso!');
@@ -67,17 +74,25 @@ class TransactionController extends Controller
             'amount' => 'required|numeric|min:0.01',
             'type' => 'required|in:income,expense',
             'category_id' => 'required|exists:categories,id',
-            'transaction_date' => 'nullable|date',
+            'transaction_date' => 'required|date',
             'notes' => 'nullable|string|max:500',
         ]);
 
-        // Se foi informada uma data específica, atualizar as timestamps
-        if ($request->filled('transaction_date')) {
-            $validated['created_at'] = $request->transaction_date;
-            $validated['updated_at'] = now();
-        }
+        // Converter a data do formato datetime-local para timestamp
+        $transactionDate = \Carbon\Carbon::parse($validated['transaction_date']);
 
-        $transaction->update($validated);
+        // Atualizar a transação com a nova data
+        $transaction->update([
+            'description' => $validated['description'],
+            'amount' => $validated['amount'],
+            'type' => $validated['type'],
+            'category_id' => $validated['category_id'],
+            'transaction_date' => $transactionDate,
+            'notes' => $validated['notes'],
+            // Opcional: se quiser alterar a data de criação também
+            'created_at' => $transactionDate,
+            'updated_at' => now(),
+        ]);
 
         return redirect()->route('transactions.show', $transaction)
             ->with('success', 'Transação atualizada com sucesso!');

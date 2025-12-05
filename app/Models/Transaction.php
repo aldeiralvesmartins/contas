@@ -6,11 +6,19 @@ use Illuminate\Database\Eloquent\Model;
 
 class Transaction extends Model
 {
-    protected $fillable = ['description', 'amount', 'category_id', 'type','status', 'due_date', 'paid_at'];
+    protected $fillable = ['description', 'amount', 'category_id', 'type', 'status', 'transaction_date', 'due_date', 'paid_at'];
 
-    public function category() {
+    public function category()
+    {
         return $this->belongsTo(Category::class);
     }
+
+    protected $casts = [
+        'amount' => 'decimal:2',
+        'transaction_date' => 'datetime', // Esta linha converte string para Carbon
+        'created_at' => 'datetime',
+        'updated_at' => 'datetime',
+    ];
 
     /**
      * Scope para transações de entrada
