@@ -65,7 +65,9 @@
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">Data da Transação</label>
-                            <p class="text-slate-900">{{ $transaction->created_at->format('d/m/Y H:i') }}</p>
+                            <p class="text-slate-900">
+                                {{ $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->format('d/m/Y') : $transaction->created_at->format('d/m H:i') }}
+                            </p>
                         </div>
                         <div>
                             <label class="block text-sm font-medium text-slate-700 mb-2">Data de Criação</label>
