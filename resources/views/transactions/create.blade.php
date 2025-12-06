@@ -39,7 +39,7 @@
 
                 <button type="button"
                         id="voice-btn"
-                        class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group relative">
+                        class="w-16 h-16 bg-gradient-to-br from-blue-500 to-purple-600 text-white rounded-full shadow-xl hover:shadow-2xl hover:scale-110 active:scale-95 transition-all duration-300 flex items-center justify-center group relative my-20">
                     <div class="relative">
                         <span class="text-2xl transition-transform group-hover:scale-110">🎤</span>
                         <div class="absolute -top-1 -right-1 w-4 h-4 bg-red-500 rounded-full animate-ping hidden" id="recording-indicator"></div>
