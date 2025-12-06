@@ -12,7 +12,7 @@ class TransactionController extends Controller
     {
         $transactions = Transaction::with('category')
             ->latest()
-            ->paginate(10);
+            ->paginate(12);
 
         $categories = Category::all();
 

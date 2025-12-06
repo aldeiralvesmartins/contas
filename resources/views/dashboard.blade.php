@@ -53,8 +53,6 @@
                             <div class="hidden rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 shadow-sm backdrop-blur-sm lg:block">
                                 <div class="text-sm text-slate-600">{{ now()->translatedFormat('d \\d\\e F') }}</div>
                             </div>
-
-
                         </div>
                     </div>
                 </div>
