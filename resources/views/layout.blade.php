@@ -35,7 +35,10 @@
                     </h1>
                 </div>
             </a>
-
+            <div class="text-sm text-slate-600 font-medium flex items-center space-x-1">
+                <i class="far fa-clock mr-1"></i>
+                <span>{{ now()->translatedFormat('d/m/Y H:i:s') }}</span>
+            </div>
             <!-- Navigation Links -->
             <div class="flex items-center space-x-1">
                 <a href="{{ route('dashboard') }}"
