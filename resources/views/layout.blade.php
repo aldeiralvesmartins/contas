@@ -79,9 +79,9 @@
         </div>
 
         <!-- Data Atual (Opcional) -->
-        <div class="text-sm text-slate-600 font-medium">
-            <i class="far fa-calendar-alt mr-1"></i>
-            {{ now()->translatedFormat('d/m') }}
+        <div class="text-sm text-slate-600 font-medium flex items-center space-x-1">
+            <i class="far fa-clock mr-1"></i>
+            <span>{{ now()->translatedFormat('d/m/Y H:i:s') }}</span>
         </div>
     </div>
 </div>
