@@ -88,7 +88,7 @@
                     </label>
                     <input type="datetime-local"
                            name="transaction_date"
-                           value="{{ old('transaction_date', $transaction->created_at->format('Y-m-d\TH:i')) }}"
+                           value="{{ old('transaction_date', $transaction->transaction_date->format('Y-m-d\TH:i')) }}"
                            class="input-primary">
                 </div>
 
