@@ -2,7 +2,7 @@
 
 @section('content')
     <!-- Header Responsivo -->
-    <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200 -mx-6 px-6 py-4 lg:py-3 overflow-x-hidden">
+    <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200 -mx-6 px-6 py-4 lg:py-3">
         <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
             <div class="flex items-center gap-3">
                 <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
@@ -31,11 +31,11 @@
         </div>
     </div>
 
-    <div class="space-y-6 pt-4 pb-6 px-4 md:px-6 overflow-x-hidden">
+    <div class="space-y-6 pt-4 pb-6">
         <!-- Stats Cards Responsivo -->
         <div class="relative">
             <!-- Mobile: Scroll Horizontal -->
-            <div class="lg:hidden overflow-x-auto scrollbar-hide -mx-4 md:-mx-6 px-4 md:px-6 pb-2">
+            <div class="lg:hidden overflow-x-auto scrollbar-hide -mx-6 px-6 pb-2">
                 <div class="flex gap-4 min-w-max" id="stats-scroll">
                     <!-- Card 1: Total -->
                     <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 min-w-[140px]">
@@ -154,82 +154,63 @@
                 @endif
             </div>
 
-            <!-- Linha 2: Filtros de Busca (Colapsável no Mobile) -->
-            <div class="card p-0 lg:p-6 overflow-hidden">
-                <!-- Botão para expandir/colapsar no Mobile -->
-                <button id="filters-toggle"
-                        class="lg:hidden w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
-                    <div class="flex items-center gap-3">
-                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
-                            <span class="text-lg">🔍</span>
-                        </div>
-                        <div>
-                            <h3 class="font-medium text-slate-800">Filtros e Busca</h3>
-                            <p class="text-xs text-slate-500">Toque para expandir</p>
+            <!-- Linha 2: Filtros de Busca -->
+            <div class="card p-6">
+                <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
+                    <!-- Busca -->
+                    <div class="lg:flex-1">
+                        <label class="block text-sm font-medium text-slate-700 mb-2">Buscar Transações</label>
+                        <div class="relative">
+                            <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
+                                🔍
+                            </div>
+                            <input type="text"
+                                   id="search-input"
+                                   placeholder="Busque por descrição, notas..."
+                                   class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
                         </div>
                     </div>
-                    <span id="toggle-icon" class="text-slate-400 text-xl transition-transform duration-300">▼</span>
-                </button>
 
-                <!-- Conteúdo dos Filtros -->
-                <div id="filters-content" class="px-6 pb-6 hidden lg:block">
-                    <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
-                        <!-- Busca -->
-                        <div class="lg:flex-1">
-                            <label class="block text-sm font-medium text-slate-700 mb-2">Buscar Transações</label>
-                            <div class="relative">
-                                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
-                                    🔍
-                                </div>
-                                <input type="text"
-                                       id="search-input"
-                                       placeholder="Busque por descrição, notas..."
-                                       class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
-                            </div>
+                    <!-- Filtros em Linha -->
+                    <div class="grid grid-cols-2 lg:flex lg:flex-nowrap gap-4">
+                        <!-- Tipo -->
+                        <div class="lg:w-32">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Tipo</label>
+                            <select id="type-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                                <option value="">Todos</option>
+                                <option value="income">Entrada</option>
+                                <option value="expense">Saída</option>
+                            </select>
                         </div>
 
-                        <!-- Filtros em Linha -->
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap gap-4">
-                            <!-- Tipo -->
-                            <div class="lg:w-32">
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Tipo</label>
-                                <select id="type-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
-                                    <option value="">Todos</option>
-                                    <option value="income">Entrada</option>
-                                    <option value="expense">Saída</option>
-                                </select>
-                            </div>
+                        <!-- Status -->
+                        <div class="lg:w-32">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                            <select id="status-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                                <option value="">Todos</option>
+                                <option value="paid">Pago</option>
+                                <option value="pending">Pendente</option>
+                            </select>
+                        </div>
 
-                            <!-- Status -->
-                            <div class="lg:w-32">
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
-                                <select id="status-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
-                                    <option value="">Todos</option>
-                                    <option value="paid">Pago</option>
-                                    <option value="pending">Pendente</option>
-                                </select>
-                            </div>
+                        <!-- Categoria -->
+                        <div class="lg:w-48">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Categoria</label>
+                            <select id="category-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                                <option value="">Todas categorias</option>
+                                @foreach($categories as $category)
+                                    <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                @endforeach
+                            </select>
+                        </div>
 
-                            <!-- Categoria -->
-                            <div class="lg:w-48">
-                                <label class="block text-sm font-medium text-slate-700 mb-2">Categoria</label>
-                                <select id="category-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
-                                    <option value="">Todas categorias</option>
-                                    @foreach($categories as $category)
-                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
-                                    @endforeach
-                                </select>
-                            </div>
-
-                            <!-- Botão Limpar Filtros -->
-                            <div class="sm:col-span-2 lg:w-auto flex items-end">
-                                <button onclick="clearFilters()"
-                                        class="w-full lg:w-auto px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center justify-center gap-2">
-                                    <span>↶</span>
-                                    <span class="hidden lg:inline">Limpar Filtros</span>
-                                    <span class="lg:hidden">Limpar Todos os Filtros</span>
-                                </button>
-                            </div>
+                        <!-- Botão Limpar Filtros -->
+                        <div class="lg:w-auto flex items-end">
+                            <button onclick="clearFilters()"
+                                    class="w-full lg:w-auto px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center justify-center gap-2">
+                                <span>↶</span>
+                                <span class="hidden lg:inline">Limpar</span>
+                            </button>
                         </div>
                     </div>
                 </div>
@@ -284,6 +265,9 @@
             </div>
         @endif
     </div>
+
+
+
 
     <style>
         /* Classes Responsivas */
@@ -429,58 +413,6 @@
                 z-index: 50;
                 pointer-events: none;
             }
-        }
-
-        /* Melhorias para mobile */
-        @media (max-width: 640px) {
-            .card {
-                border-radius: 0.75rem;
-            }
-
-            #stats-scroll {
-                padding-right: 1.5rem;
-            }
-
-            /* Ajustar padding geral */
-            .space-y-6 > * {
-                margin-left: -0.5rem;
-                margin-right: -0.5rem;
-                padding-left: 0.5rem;
-                padding-right: 0.5rem;
-            }
-
-            /* Ajustar cards de transações mobile */
-            #transactions-list-mobile .transaction-item {
-                margin-left: 0;
-                margin-right: 0;
-            }
-        }
-
-        /* Suavizar transição dos filtros */
-        #filters-content {
-            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
-        }
-
-        @media (max-width: 1024px) {
-            #filters-content {
-                max-height: 0;
-                opacity: 0;
-                overflow: hidden;
-            }
-
-            #filters-content:not(.hidden) {
-                max-height: 500px;
-                opacity: 1;
-            }
-        }
-
-        /* Melhorar aparência do botão toggle */
-        #filters-toggle:active {
-            transform: scale(0.98);
-        }
-
-        #toggle-icon {
-            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 
@@ -637,58 +569,6 @@
             if (urlParams.has('search') || urlParams.has('type') || urlParams.has('category') || urlParams.has('status')) {
                 applyFilters();
             }
-
-            // Controle dos filtros colapsáveis no mobile
-            const filtersToggle = document.getElementById('filters-toggle');
-            const filtersContent = document.getElementById('filters-content');
-            const toggleIcon = document.getElementById('toggle-icon');
-
-            if (filtersToggle && filtersContent) {
-                filtersToggle.addEventListener('click', function() {
-                    const isExpanded = filtersContent.classList.contains('hidden');
-
-                    if (isExpanded) {
-                        // Expandir
-                        filtersContent.classList.remove('hidden');
-                        toggleIcon.style.transform = 'rotate(180deg)';
-                        filtersToggle.classList.add('border-b', 'border-slate-200');
-                    } else {
-                        // Colapsar
-                        filtersContent.classList.add('hidden');
-                        toggleIcon.style.transform = 'rotate(0deg)';
-                        filtersToggle.classList.remove('border-b', 'border-slate-200');
-                    }
-                });
-
-                // Auto-expandir se houver filtros ativos na URL
-                const urlParams = new URLSearchParams(window.location.search);
-                const hasActiveFilters = urlParams.has('search') || urlParams.has('type') ||
-                    urlParams.has('category') || urlParams.has('status');
-
-                if (hasActiveFilters && window.innerWidth < 1024) {
-                    filtersContent.classList.remove('hidden');
-                    toggleIcon.style.transform = 'rotate(180deg)';
-                    filtersToggle.classList.add('border-b', 'border-slate-200');
-                }
-            }
-
-            // Ajustar comportamento ao redimensionar a tela
-            window.addEventListener('resize', function() {
-                if (window.innerWidth >= 1024) {
-                    // Desktop - sempre mostrar
-                    if (filtersContent) {
-                        filtersContent.classList.remove('hidden');
-                        if (toggleIcon) {
-                            toggleIcon.style.transform = 'rotate(0deg)';
-                        }
-                    }
-                } else {
-                    // Mobile - verificar se estava expandido
-                    if (filtersContent && !filtersContent.classList.contains('hidden') && toggleIcon) {
-                        toggleIcon.style.transform = 'rotate(180deg)';
-                    }
-                }
-            });
         });
 
         // Prevenir envio de formulário duplo

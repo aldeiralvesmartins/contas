@@ -41,6 +41,33 @@
                 {{ $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->format('d/m/Y') : $transaction->created_at->format('d/m H:i') }}
             </div>
         </div>
-        <div class="flex items-center gap-1" onclick="event.stopPropagation()"></div>
+        <div class="flex items-center gap-1" onclick="event.stopPropagation()">
+            @if($transaction->status === 'pending')
+                <form action="{{ route('transactions.markPaid', $transaction->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="btn-action-success group" data-tooltip="Marcar como Paga">
+                        <span class="group-hover:scale-110 transition-transform">✅</span>
+                    </button>
+                </form>
+            @else
+                <form action="{{ route('transactions.markPending', $transaction->id) }}" method="POST" class="inline">
+                    @csrf
+                    <button type="submit" class="btn-action-warning group" data-tooltip="Marcar como Pendente">
+                        <span class="group-hover:scale-110 transition-transform">⏳</span>
+                    </button>
+                </form>
+            @endif
+
+            <form action="{{ route('transactions.duplicate', $transaction->id) }}" method="POST" class="inline">
+                @csrf
+                <button type="submit" class="btn-action group" data-tooltip="Duplicar Transação">
+                    <span class="group-hover:scale-110 transition-transform">⎘</span>
+                </button>
+            </form>
+
+            <button onclick="window.location.href='{{ route('transactions.edit', $transaction->id) }}'" class="btn-action group" data-tooltip="Editar">
+                <span class="group-hover:scale-110 transition-transform">✏️</span>
+            </button>
+        </div>
     </div>
 </div>
