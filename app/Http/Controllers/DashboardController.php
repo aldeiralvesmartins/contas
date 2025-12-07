@@ -288,4 +288,34 @@ class DashboardController extends Controller
 
         return $options;
     }
+
+    public function exportPdf(Request $request)
+    {
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $selectedDate = Carbon::createFromFormat('Y-m', $month);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
+
+        $income = Transaction::where('type', 'income')
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->sum('amount') ?? 0;
+        $expense = Transaction::where('type', 'expense')
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->sum('amount') ?? 0;
+        $balance = $income - $expense;
+
+        $transactions = Transaction::with('category')
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->orderBy('transaction_date')
+            ->get();
+
+        return view('dashboard-export', [
+            'income' => $income,
+            'expense' => $expense,
+            'balance' => $balance,
+            'transactions' => $transactions,
+            'selected_month' => $month,
+            'selected_month_name' => $selectedDate->translatedFormat('F Y'),
+        ]);
+    }
 }

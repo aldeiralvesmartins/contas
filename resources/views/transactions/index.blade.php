@@ -47,9 +47,6 @@
                     <!-- Card 2: Entradas -->
                     <div class="bg-gradient-to-br from-emerald-50 to-white rounded-xl p-4 shadow-sm border border-emerald-100 min-w-[140px]">
                         <div class="text-xs text-emerald-600 mb-1">Entradas</div>
-                        @php
-                            $total_income = $transactions->where('type', 'income')->sum('amount');
-                        @endphp
                         <div class="text-xl font-bold text-emerald-700">R$ {{ number_format($total_income, 2, ',', '.') }}</div>
                         <div class="text-[10px] text-emerald-500 mt-1">receitas</div>
                     </div>
@@ -57,9 +54,6 @@
                     <!-- Card 3: Saídas -->
                     <div class="bg-gradient-to-br from-rose-50 to-white rounded-xl p-4 shadow-sm border border-rose-100 min-w-[140px]">
                         <div class="text-xs text-rose-600 mb-1">Saídas</div>
-                        @php
-                            $total_expense = $transactions->where('type', 'expense')->sum('amount');
-                        @endphp
                         <div class="text-xl font-bold text-rose-700">R$ {{ number_format($total_expense, 2, ',', '.') }}</div>
                         <div class="text-[10px] text-rose-500 mt-1">despesas</div>
                     </div>
@@ -67,9 +61,6 @@
                     <!-- Card 4: Saldo -->
                     <div class="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 shadow-sm border border-blue-100 min-w-[140px]">
                         <div class="text-xs text-blue-600 mb-1">Saldo</div>
-                        @php
-                            $balance = $total_income - $total_expense;
-                        @endphp
                         <div class="text-xl font-bold {{ $balance >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
                             R$ {{ number_format($balance, 2, ',', '.') }}
                         </div>
@@ -113,8 +104,20 @@
 
         <!-- Seção de Filtros e Data -->
         <div class="space-y-4">
+            <!-- Toggle Filtros -->
+            <div class="flex items-center justify-between">
+                <button type="button" id="toggle-filters" class="inline-flex items-center gap-2 px-4 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50">
+                    <span>🔽</span>
+                    <span>Filtros</span>
+                </button>
+                <a href="{{ route('transactions.export', ['month' => request('month', now()->format('Y-m'))]) }}" target="_blank"
+                   class="inline-flex items-center gap-2 px-4 py-2 rounded-lg bg-emerald-600 text-white text-sm font-medium hover:bg-emerald-700">
+                    <span>🖨️</span>
+                    <span>Exportar (PDF)</span>
+                </a>
+            </div>
             <!-- Linha 1: Filtro de Data + Botão Hoje -->
-            <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+            <div id="filters-panel" class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between hidden">
                 <!-- Filtro de Mês -->
                 <div class="w-full lg:w-auto lg:flex-1">
                     <form method="GET" action="{{ route('transactions.index') }}" class="w-full">
@@ -155,7 +158,7 @@
             </div>
 
             <!-- Linha 2: Filtros de Busca -->
-            <div class="card p-6">
+            <div class="card p-6 hidden" id="filters-advanced">
                 <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
                     <!-- Busca -->
                     <div class="lg:flex-1">
@@ -418,6 +421,37 @@
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            const monthKey = 'finance_selected_month';
+            const monthSelect = document.querySelector('select[name="month"]');
+            const url = new URL(window.location.href);
+            const urlMonth = url.searchParams.get('month');
+            if (urlMonth) {
+                try { localStorage.setItem(monthKey, urlMonth); } catch (e) {}
+            } else if (monthSelect) {
+                try {
+                    const saved = localStorage.getItem(monthKey);
+                    if (saved && monthSelect.value !== saved) {
+                        monthSelect.value = saved;
+                        monthSelect.form.submit();
+                        return;
+                    }
+                } catch (e) {}
+            }
+            if (monthSelect) {
+                monthSelect.addEventListener('change', function() {
+                    try { localStorage.setItem(monthKey, this.value); } catch (e) {}
+                });
+            }
+            // Toggle filtros (colapsar/expandir)
+            const toggleBtn = document.getElementById('toggle-filters');
+            const panel = document.getElementById('filters-panel');
+            const advanced = document.getElementById('filters-advanced');
+            if (toggleBtn && panel && advanced) {
+                toggleBtn.addEventListener('click', () => {
+                    panel.classList.toggle('hidden');
+                    advanced.classList.toggle('hidden');
+                });
+            }
             // Elementos dos filtros
             const searchInput = document.getElementById('search-input');
             const typeFilter = document.getElementById('type-filter');

@@ -14,6 +14,7 @@ Route::post('accounts/{account}/pay', [AccountController::class, 'pay'])
     ->name('accounts.pay');
 
 Route::resource('transactions', TransactionController::class);
+Route::get('transactions/export/pdf', [TransactionController::class, 'exportPdf'])->name('transactions.export');
 Route::resource('categories', CategoryController::class);
 Route::post('/billet/upload', [BilletController::class, 'uploadBillet'])->name('billet.upload');
 Route::post('/accounts/{account}/duplicate', [AccountController::class, 'duplicate'])->name('accounts.duplicate');
@@ -21,3 +22,6 @@ Route::post('/transactions/{transaction}/duplicate', [TransactionController::cla
 // routes/web.php
 Route::post('/transactions/{id}/mark-paid', [TransactionController::class, 'markPaid'])->name('transactions.markPaid');
 Route::post('/transactions/{id}/mark-pending', [TransactionController::class, 'markPending'])->name('transactions.markPending');
+
+// Dashboard export
+Route::get('/dashboard/export/pdf', [DashboardController::class, 'exportPdf'])->name('dashboard.export');

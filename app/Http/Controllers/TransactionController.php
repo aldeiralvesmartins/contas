@@ -23,10 +23,57 @@ class TransactionController extends Controller
             ->paginate(12)
             ->appends(['month' => $month]);
 
+        // Totais consolidados do mês (independente da paginação)
+        $total_income = Transaction::whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->where('type', 'income')
+            ->sum('amount');
+        $total_expense = Transaction::whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->where('type', 'expense')
+            ->sum('amount');
+        $balance = $total_income - $total_expense;
+
         $categories = Category::all();
         $monthly_options = $this->getMonthlyOptions($month);
 
-        return view('transactions.index', compact('transactions', 'categories', 'monthly_options'));
+        return view('transactions.index', compact(
+            'transactions',
+            'categories',
+            'monthly_options',
+            'total_income',
+            'total_expense',
+            'balance',
+            'month'
+        ));
+    }
+
+    public function exportPdf(Request $request)
+    {
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $selectedDate = Carbon::createFromFormat('Y-m', $month);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
+
+        $transactions = Transaction::with('category')
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->orderBy('transaction_date')
+            ->get();
+
+        $total_income = Transaction::whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->where('type', 'income')
+            ->sum('amount');
+        $total_expense = Transaction::whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->where('type', 'expense')
+            ->sum('amount');
+        $balance = $total_income - $total_expense;
+
+        return view('transactions.export', [
+            'transactions' => $transactions,
+            'total_income' => $total_income,
+            'total_expense' => $total_expense,
+            'balance' => $balance,
+            'selected_month' => $month,
+            'selected_month_name' => $selectedDate->translatedFormat('F Y'),
+        ]);
     }
 
     public function create()

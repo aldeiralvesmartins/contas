@@ -43,6 +43,11 @@
                         </form>
 
                         <div class="flex items-center gap-2">
+                            <a href="{{ route('dashboard.export', ['month' => request('month', now()->format('Y-m'))]) }}" target="_blank"
+                               class="inline-flex items-center gap-2 px-3 py-2 rounded-lg bg-emerald-600 text-white text-xs font-medium hover:bg-emerald-700">
+                                <span>🖨️</span>
+                                <span>Exportar (PDF)</span>
+                            </a>
                             @if(request()->has('month') && request('month') !== now()->format('Y-m'))
                                 <a href="{{ route('dashboard') }}"
                                    class="rounded-xl bg-slate-100 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200">
@@ -580,4 +585,30 @@
             }
         }
     </style>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const monthKey = 'finance_selected_month';
+            const monthSelect = document.querySelector('form[action*="dashboard"] select[name="month"]');
+            const url = new URL(window.location.href);
+            const urlMonth = url.searchParams.get('month');
+            if (urlMonth) {
+                try { localStorage.setItem(monthKey, urlMonth); } catch (e) {}
+            } else if (monthSelect) {
+                try {
+                    const saved = localStorage.getItem(monthKey);
+                    if (saved && monthSelect.value !== saved) {
+                        monthSelect.value = saved;
+                        monthSelect.form.submit();
+                        return;
+                    }
+                } catch (e) {}
+            }
+            if (monthSelect) {
+                monthSelect.addEventListener('change', function() {
+                    try { localStorage.setItem(monthKey, this.value); } catch (e) {}
+                });
+            }
+        });
+    </script>
 @endsection
