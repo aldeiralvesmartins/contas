@@ -84,7 +84,44 @@
                 </div>
             </div>
         </div>
+        <!-- Filtros e Data -->
+        <div class="flex flex-wrap items-center justify-between gap-3">
+            <!-- Filtro de Mês -->
+            <form method="GET" action="{{ route('transactions.index') }}" class="flex-1 min-w-[200px]">
+                <div class="relative">
+                    <select name="month"
+                            onchange="this.form.submit()"
+                            class="w-full appearance-none rounded-xl border border-slate-200 bg-white/80 py-2.5 pl-4 pr-10 text-sm text-slate-700 backdrop-blur-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
+                        @foreach($monthly_options as $option)
+                            <option value="{{ $option['value'] }}"
+                                    {{ $option['is_selected'] ? 'selected' : '' }}
+                                    class="py-2">
+                                {{ $option['label'] }}
+                                @if($option['is_current']) (Atual) @endif
+                            </option>
+                        @endforeach
+                    </select>
+                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
+                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                        </svg>
+                    </div>
+                </div>
+            </form>
 
+            <div class="flex items-center gap-2">
+                @if(request()->has('month') && request('month') !== now()->format('Y-m'))
+                    <a href="{{ route('transactions.index') }}"
+                       class="rounded-xl bg-slate-100 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200">
+                        Hoje
+                    </a>
+                @endif
+
+                <div class="hidden rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 shadow-sm backdrop-blur-sm lg:block">
+                    <div class="text-sm text-slate-600">{{ now()->translatedFormat('d \\d\\e F') }}</div>
+                </div>
+            </div>
+        </div>
         <!-- Cards Grid -->
         <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="transactions-grid">
             @foreach($transactions as $transaction)

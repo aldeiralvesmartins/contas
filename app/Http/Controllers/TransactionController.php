@@ -5,18 +5,28 @@ namespace App\Http\Controllers;
 use App\Models\Transaction;
 use App\Models\Category;
 use Illuminate\Http\Request;
+use Carbon\Carbon;
 
 class TransactionController extends Controller
 {
-    public function index()
+    public function index(Request $request)
     {
+        // Filtro por mês (padrão mês atual em formato Y-m)
+        $month = $request->input('month', Carbon::now()->format('Y-m'));
+        $selectedDate = Carbon::createFromFormat('Y-m', $month);
+        $startOfMonth = $selectedDate->copy()->startOfMonth();
+        $endOfMonth = $selectedDate->copy()->endOfMonth();
+
         $transactions = Transaction::with('category')
-            ->latest()
-            ->paginate(12);
+            ->whereBetween('transaction_date', [$startOfMonth, $endOfMonth])
+            ->latest('transaction_date')
+            ->paginate(12)
+            ->appends(['month' => $month]);
 
         $categories = Category::all();
+        $monthly_options = $this->getMonthlyOptions($month);
 
-        return view('transactions.index', compact('transactions', 'categories'));
+        return view('transactions.index', compact('transactions', 'categories', 'monthly_options'));
     }
 
     public function create()
@@ -170,5 +180,26 @@ class TransactionController extends Controller
         $transaction->update(['status' => 'pending']);
 
         return redirect()->back()->with('success', 'Transação marcada como pendente!');
+    }
+
+    private function getMonthlyOptions(string $selectedMonth)
+    {
+        $options = [];
+        $startDate = Carbon::now()->subMonths(12);
+        $endDate = Carbon::now()->addMonths(6);
+
+        $current = $startDate->copy();
+        while ($current <= $endDate) {
+            $value = $current->format('Y-m');
+            $options[] = [
+                'value' => $value,
+                'label' => $current->translatedFormat('F Y'),
+                'is_current' => $value === Carbon::now()->format('Y-m'),
+                'is_selected' => $value === $selectedMonth,
+            ];
+            $current->addMonth();
+        }
+
+        return $options;
     }
 }
