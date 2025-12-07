@@ -117,7 +117,7 @@
                 </a>
             </div>
             <!-- Linha 1: Filtro de Data + Botão Hoje -->
-            <div id="filters-panel" class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between hidden">
+            <div id="filters-panel" class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
                 <!-- Filtro de Mês -->
                 <div class="w-full lg:w-auto lg:flex-1">
                     <form method="GET" action="{{ route('transactions.index') }}" class="w-full">
