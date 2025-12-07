@@ -1,275 +1,277 @@
 @extends('layout')
 
 @section('content')
-    <div class="space-y-6">
-        <!-- Header -->
-        <div class="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4">
-            <div>
-                <h2 class="text-3xl font-bold text-slate-800 flex items-center gap-3">
-                    <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center">
-                        <span class="text-xl">💸</span>
+    <!-- Header Responsivo -->
+    <div class="sticky top-0 z-10 bg-white/95 backdrop-blur-sm border-b border-slate-200 -mx-6 px-6 py-4 lg:py-3 overflow-x-hidden">
+        <div class="flex flex-col lg:flex-row lg:items-center justify-between gap-4">
+            <div class="flex items-center gap-3">
+                <div class="w-10 h-10 bg-green-100 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <span class="text-xl">💸</span>
+                </div>
+                <div>
+                    <h2 class="text-lg lg:text-2xl font-bold text-slate-800">Transações</h2>
+                    <p class="text-xs lg:text-sm text-slate-600">Histórico de entradas e saídas</p>
+                </div>
+            </div>
+
+            <div class="flex items-center gap-3">
+                <!-- Data atual - Desktop -->
+                <div class="hidden lg:block text-sm text-slate-600 bg-slate-50 px-4 py-2 rounded-lg">
+                    {{ now()->translatedFormat('d \\d\\e F, Y') }}
+                </div>
+
+                <!-- Botão Nova Transação -->
+                <a href="{{ route('transactions.create') }}"
+                   class="btn-modern-primary flex items-center gap-2 group ml-auto lg:ml-0">
+                    <span class="text-lg group-hover:scale-110 transition-transform duration-200">+</span>
+                    <span class="hidden lg:inline">Nova Transação</span>
+                    <span class="lg:hidden">Nova</span>
+                </a>
+            </div>
+        </div>
+    </div>
+
+    <div class="space-y-6 pt-4 pb-6 px-4 md:px-6 overflow-x-hidden">
+        <!-- Stats Cards Responsivo -->
+        <div class="relative">
+            <!-- Mobile: Scroll Horizontal -->
+            <div class="lg:hidden overflow-x-auto scrollbar-hide -mx-4 md:-mx-6 px-4 md:px-6 pb-2">
+                <div class="flex gap-4 min-w-max" id="stats-scroll">
+                    <!-- Card 1: Total -->
+                    <div class="bg-white rounded-xl p-4 shadow-sm border border-slate-100 min-w-[140px]">
+                        <div class="text-xs text-slate-500 mb-1">Total</div>
+                        <div class="text-xl font-bold text-slate-800">{{ $transactions->total() }}</div>
+                        <div class="text-[10px] text-slate-400 mt-1">transações</div>
                     </div>
-                    Transações
-                </h2>
-                <p class="text-slate-600 mt-2">Histórico de entradas e saídas</p>
-            </div>
-            <a href="{{ route('transactions.create') }}" class="btn-modern-primary flex items-center gap-2 group">
-                <span class="group-hover:scale-110 transition-transform duration-200">+</span>
-                <span>Nova Transação</span>
-            </a>
-        </div>
 
-        <!-- Stats -->
-        <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-            <div class="card p-6 text-center">
-                <div class="text-2xl font-bold text-slate-800">{{ $transactions->total() }}</div>
-                <p class="text-slate-600 text-sm">Total</p>
-            </div>
-            <div class="card p-6 text-center">
-                @php
-                    $total_income = $transactions->where('type', 'income')->sum('amount');
-                @endphp
-                <div class="text-2xl font-bold text-emerald-600">R$ {{ number_format($total_income, 2, ',', '.') }}</div>
-                <p class="text-slate-600 text-sm">Entradas</p>
-            </div>
-            <div class="card p-6 text-center">
-                @php
-                    $total_expense = $transactions->where('type', 'expense')->sum('amount');
-                @endphp
-                <div class="text-2xl font-bold text-rose-600">R$ {{ number_format($total_expense, 2, ',', '.') }}</div>
-                <p class="text-slate-600 text-sm">Saídas</p>
-            </div>
-            <div class="card p-6 text-center">
-                @php
-                    $balance = $total_income - $total_expense;
-                @endphp
-                <div class="text-2xl font-bold {{ $balance >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
-                    R$ {{ number_format($balance, 2, ',', '.') }}
-                </div>
-                <p class="text-slate-600 text-sm">Saldo</p>
-            </div>
-        </div>
+                    <!-- Card 2: Entradas -->
+                    <div class="bg-gradient-to-br from-emerald-50 to-white rounded-xl p-4 shadow-sm border border-emerald-100 min-w-[140px]">
+                        <div class="text-xs text-emerald-600 mb-1">Entradas</div>
+                        @php
+                            $total_income = $transactions->where('type', 'income')->sum('amount');
+                        @endphp
+                        <div class="text-xl font-bold text-emerald-700">R$ {{ number_format($total_income, 2, ',', '.') }}</div>
+                        <div class="text-[10px] text-emerald-500 mt-1">receitas</div>
+                    </div>
 
-        <!-- Filtros -->
-        <div class="card p-6">
-            <div class="flex flex-col sm:flex-row gap-4 items-start sm:items-end">
-                <div class="flex-1">
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Buscar Transações</label>
-                    <input type="text" id="search-input" placeholder="Digite para filtrar..." class="input-modern">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Tipo</label>
-                    <select class="input-modern" id="type-filter">
-                        <option value="">Todos</option>
-                        <option value="income">Entrada</option>
-                        <option value="expense">Saída</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Categoria</label>
-                    <select class="input-modern" id="category-filter">
-                        <option value="">Todas</option>
-                        @foreach($categories as $category)
-                            <option value="{{ $category->id }}">{{ $category->name }}</option>
-                        @endforeach
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
-                    <select class="input-modern" id="status-filter">
-                        <option value="">Todos</option>
-                        <option value="paid">Pago</option>
-                        <option value="pending">Pendente</option>
-                    </select>
-                </div>
-            </div>
-        </div>
-        <!-- Filtros e Data -->
-        <div class="flex flex-wrap items-center justify-between gap-3">
-            <!-- Filtro de Mês -->
-            <form method="GET" action="{{ route('transactions.index') }}" class="flex-1 min-w-[200px]">
-                <div class="relative">
-                    <select name="month"
-                            onchange="this.form.submit()"
-                            class="w-full appearance-none rounded-xl border border-slate-200 bg-white/80 py-2.5 pl-4 pr-10 text-sm text-slate-700 backdrop-blur-sm shadow-sm transition-all focus:border-blue-500 focus:outline-none focus:ring-2 focus:ring-blue-500/20">
-                        @foreach($monthly_options as $option)
-                            <option value="{{ $option['value'] }}"
-                                    {{ $option['is_selected'] ? 'selected' : '' }}
-                                    class="py-2">
-                                {{ $option['label'] }}
-                                @if($option['is_current']) (Atual) @endif
-                            </option>
-                        @endforeach
-                    </select>
-                    <div class="pointer-events-none absolute inset-y-0 right-0 flex items-center pr-3">
-                        <svg class="h-5 w-5 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                        </svg>
+                    <!-- Card 3: Saídas -->
+                    <div class="bg-gradient-to-br from-rose-50 to-white rounded-xl p-4 shadow-sm border border-rose-100 min-w-[140px]">
+                        <div class="text-xs text-rose-600 mb-1">Saídas</div>
+                        @php
+                            $total_expense = $transactions->where('type', 'expense')->sum('amount');
+                        @endphp
+                        <div class="text-xl font-bold text-rose-700">R$ {{ number_format($total_expense, 2, ',', '.') }}</div>
+                        <div class="text-[10px] text-rose-500 mt-1">despesas</div>
+                    </div>
+
+                    <!-- Card 4: Saldo -->
+                    <div class="bg-gradient-to-br from-blue-50 to-white rounded-xl p-4 shadow-sm border border-blue-100 min-w-[140px]">
+                        <div class="text-xs text-blue-600 mb-1">Saldo</div>
+                        @php
+                            $balance = $total_income - $total_expense;
+                        @endphp
+                        <div class="text-xl font-bold {{ $balance >= 0 ? 'text-emerald-700' : 'text-rose-700' }}">
+                            R$ {{ number_format($balance, 2, ',', '.') }}
+                        </div>
+                        <div class="text-[10px] {{ $balance >= 0 ? 'text-emerald-500' : 'text-rose-500' }} mt-1">
+                            {{ $balance >= 0 ? 'positivo' : 'negativo' }}
+                        </div>
                     </div>
                 </div>
-            </form>
+            </div>
 
-            <div class="flex items-center gap-2">
+            <!-- Desktop: Grid 4 Colunas -->
+            <div class="hidden lg:grid lg:grid-cols-4 gap-6">
+                <div class="card p-6 text-center hover:shadow-md transition-shadow">
+                    <div class="text-2xl font-bold text-slate-800">{{ $transactions->total() }}</div>
+                    <p class="text-slate-600 text-sm mt-1">Total de Transações</p>
+                </div>
+                <div class="card p-6 text-center hover:shadow-md transition-shadow bg-gradient-to-br from-emerald-50 to-white">
+                    <div class="text-2xl font-bold text-emerald-600">R$ {{ number_format($total_income, 2, ',', '.') }}</div>
+                    <p class="text-emerald-500 text-sm mt-1">Total de Entradas</p>
+                </div>
+                <div class="card p-6 text-center hover:shadow-md transition-shadow bg-gradient-to-br from-rose-50 to-white">
+                    <div class="text-2xl font-bold text-rose-600">R$ {{ number_format($total_expense, 2, ',', '.') }}</div>
+                    <p class="text-rose-500 text-sm mt-1">Total de Saídas</p>
+                </div>
+                <div class="card p-6 text-center hover:shadow-md transition-shadow bg-gradient-to-br from-blue-50 to-white">
+                    <div class="text-2xl font-bold {{ $balance >= 0 ? 'text-emerald-600' : 'text-rose-600' }}">
+                        R$ {{ number_format($balance, 2, ',', '.') }}
+                    </div>
+                    <p class="text-slate-600 text-sm mt-1">Saldo Atual</p>
+                </div>
+            </div>
+
+            <!-- Indicadores de Scroll - Mobile -->
+            <div class="lg:hidden flex justify-center gap-1 mt-2">
+                <div class="w-1.5 h-1.5 rounded-full bg-emerald-400"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+                <div class="w-1.5 h-1.5 rounded-full bg-slate-300"></div>
+            </div>
+        </div>
+
+        <!-- Seção de Filtros e Data -->
+        <div class="space-y-4">
+            <!-- Linha 1: Filtro de Data + Botão Hoje -->
+            <div class="flex flex-col lg:flex-row gap-4 items-start lg:items-center justify-between">
+                <!-- Filtro de Mês -->
+                <div class="w-full lg:w-auto lg:flex-1">
+                    <form method="GET" action="{{ route('transactions.index') }}" class="w-full">
+                        <div class="relative">
+                            <div class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-500">
+                                📅
+                            </div>
+                            <select name="month"
+                                    onchange="this.form.submit()"
+                                    class="w-full lg:w-auto lg:max-w-xs pl-12 pr-10 py-3 rounded-xl border border-slate-200 bg-white appearance-none text-sm font-medium text-slate-700 focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100 hover:border-slate-300 transition-colors">
+                                @foreach($monthly_options as $option)
+                                    <option value="{{ $option['value'] }}"
+                                        {{ $option['is_selected'] ? 'selected' : '' }}>
+                                        {{ $option['label'] }}
+                                        @if($option['is_current']) (Atual) @endif
+                                    </option>
+                                @endforeach
+                            </select>
+                            <div class="absolute right-4 top-1/2 transform -translate-y-1/2 text-slate-400">
+                                <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                                </svg>
+                            </div>
+                        </div>
+                    </form>
+                </div>
+
+                <!-- Botão Voltar ao Mês Atual -->
                 @if(request()->has('month') && request('month') !== now()->format('Y-m'))
-                    <a href="{{ route('transactions.index') }}"
-                       class="rounded-xl bg-slate-100 px-3 py-2.5 text-sm font-medium text-slate-700 transition-colors hover:bg-slate-200">
-                        Hoje
-                    </a>
+                    <div class="w-full lg:w-auto">
+                        <a href="{{ route('transactions.index') }}"
+                           class="inline-flex items-center gap-2 w-full lg:w-auto justify-center bg-emerald-50 text-emerald-700 hover:bg-emerald-100 px-4 py-3 rounded-xl font-medium text-sm transition-colors active:scale-95">
+                            <span>↶</span>
+                            <span>Voltar ao mês atual</span>
+                        </a>
+                    </div>
                 @endif
+            </div>
 
-                <div class="hidden rounded-xl border border-slate-200 bg-white/80 px-4 py-2.5 shadow-sm backdrop-blur-sm lg:block">
-                    <div class="text-sm text-slate-600">{{ now()->translatedFormat('d \\d\\e F') }}</div>
+            <!-- Linha 2: Filtros de Busca (Colapsável no Mobile) -->
+            <div class="card p-0 lg:p-6 overflow-hidden">
+                <!-- Botão para expandir/colapsar no Mobile -->
+                <button id="filters-toggle"
+                        class="lg:hidden w-full px-6 py-4 flex items-center justify-between text-left hover:bg-slate-50 transition-colors">
+                    <div class="flex items-center gap-3">
+                        <div class="w-10 h-10 bg-slate-100 rounded-lg flex items-center justify-center">
+                            <span class="text-lg">🔍</span>
+                        </div>
+                        <div>
+                            <h3 class="font-medium text-slate-800">Filtros e Busca</h3>
+                            <p class="text-xs text-slate-500">Toque para expandir</p>
+                        </div>
+                    </div>
+                    <span id="toggle-icon" class="text-slate-400 text-xl transition-transform duration-300">▼</span>
+                </button>
+
+                <!-- Conteúdo dos Filtros -->
+                <div id="filters-content" class="px-6 pb-6 hidden lg:block">
+                    <div class="flex flex-col lg:flex-row gap-4 lg:items-end">
+                        <!-- Busca -->
+                        <div class="lg:flex-1">
+                            <label class="block text-sm font-medium text-slate-700 mb-2">Buscar Transações</label>
+                            <div class="relative">
+                                <div class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-500">
+                                    🔍
+                                </div>
+                                <input type="text"
+                                       id="search-input"
+                                       placeholder="Busque por descrição, notas..."
+                                       class="w-full pl-10 pr-4 py-3 rounded-xl border border-slate-200 bg-white text-sm focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                            </div>
+                        </div>
+
+                        <!-- Filtros em Linha -->
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:flex lg:flex-nowrap gap-4">
+                            <!-- Tipo -->
+                            <div class="lg:w-32">
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Tipo</label>
+                                <select id="type-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="">Todos</option>
+                                    <option value="income">Entrada</option>
+                                    <option value="expense">Saída</option>
+                                </select>
+                            </div>
+
+                            <!-- Status -->
+                            <div class="lg:w-32">
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Status</label>
+                                <select id="status-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="">Todos</option>
+                                    <option value="paid">Pago</option>
+                                    <option value="pending">Pendente</option>
+                                </select>
+                            </div>
+
+                            <!-- Categoria -->
+                            <div class="lg:w-48">
+                                <label class="block text-sm font-medium text-slate-700 mb-2">Categoria</label>
+                                <select id="category-filter" class="w-full px-4 py-3 rounded-xl border border-slate-200 bg-white text-sm appearance-none focus:outline-none focus:border-emerald-400 focus:ring-2 focus:ring-emerald-100">
+                                    <option value="">Todas categorias</option>
+                                    @foreach($categories as $category)
+                                        <option value="{{ $category->id }}">{{ $category->name }}</option>
+                                    @endforeach
+                                </select>
+                            </div>
+
+                            <!-- Botão Limpar Filtros -->
+                            <div class="sm:col-span-2 lg:w-auto flex items-end">
+                                <button onclick="clearFilters()"
+                                        class="w-full lg:w-auto px-4 py-3 rounded-xl border border-slate-200 bg-white text-slate-700 text-sm font-medium hover:bg-slate-50 transition-colors active:scale-95 flex items-center justify-center gap-2">
+                                    <span>↶</span>
+                                    <span class="hidden lg:inline">Limpar Filtros</span>
+                                    <span class="lg:hidden">Limpar Todos os Filtros</span>
+                                </button>
+                            </div>
+                        </div>
+                    </div>
                 </div>
             </div>
         </div>
-        <!-- Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-6" id="transactions-grid">
+
+        <!-- Contador de Resultados -->
+        <div class="flex items-center justify-between">
+            <div class="text-sm lg:text-base font-medium text-slate-700" id="results-counter">
+                {{ $transactions->total() }} transações encontradas
+            </div>
+            <div class="text-sm text-slate-500 hidden lg:block">
+                {{ $transactions->firstItem() }}-{{ $transactions->lastItem() }} de {{ $transactions->total() }}
+            </div>
+        </div>
+
+        <!-- Lista/Grid de Transações Responsivo -->
+        <!-- Mobile: Lista -->
+        <div class="lg:hidden space-y-3" id="transactions-list-mobile">
             @foreach($transactions as $transaction)
-                <div class="transaction-card card p-6 hover:shadow-xl transition-all duration-300 transform hover:-translate-y-2 relative overflow-hidden
-                    {{ $transaction->status === 'paid' ? 'ring-2 ring-emerald-200 bg-gradient-to-br from-white to-emerald-50' : '' }}"
-                     data-type="{{ $transaction->type }}"
-                     data-category="{{ $transaction->category_id }}"
-                     data-description="{{ strtolower($transaction->description) }}"
-                     data-notes="{{ strtolower($transaction->notes ?? '') }}"
-                     data-status="{{ $transaction->status }}">
+                @include('transactions.partials.mobile-card', ['transaction' => $transaction])
+            @endforeach
+        </div>
 
-                    <!-- Badge de Status Pago -->
-                    @if($transaction->status === 'paid')
-                        <div class="absolute top-4 right-4">
-                            <div class="badge-paid flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold">
-                                <div class="w-2 h-2 bg-white rounded-full animate-pulse"></div>
-                                Pago
-                            </div>
-                        </div>
-                    @else
-                        <div class="absolute top-4 right-4">
-                            <div class="badge-pending flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold">
-                                <div class="w-2 h-2 bg-amber-500 rounded-full animate-pulse"></div>
-                                Pendente
-                            </div>
-                        </div>
-                    @endif
-
-                    <!-- Header -->
-                    <div class="flex items-start justify-between mb-4 {{ $transaction->status === 'paid' ? 'pr-16' : '' }}">
-                        <div class="flex items-center gap-3">
-                            <div class="w-12 h-12 {{ $transaction->type === 'income' ? 'bg-emerald-100' : 'bg-rose-100' }} rounded-xl flex items-center justify-center shadow-sm">
-                        <span class="text-xl {{ $transaction->type === 'income' ? 'text-emerald-600' : 'text-rose-600' }}">
-                            {{ $transaction->type === 'income' ? '📈' : '📉' }}
-                        </span>
-                            </div>
-                            <div>
-                                <h3 class="font-semibold text-slate-800 text-lg leading-tight">{{ $transaction->description }}</h3>
-                                <div class="flex items-center gap-2 mt-1">
-                            <span class="badge-modern-info">
-                                {{ $transaction->category->name }}
-                            </span>
-                                    @if($transaction->type === 'income')
-                                        <span class="badge-modern-success">Entrada</span>
-                                    @else
-                                        <span class="badge-modern-danger">Saída</span>
-                                    @endif
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Valor -->
-                    <div class="mb-4">
-                        <div class="text-2xl font-bold {{ $transaction->type === 'income' ? 'text-emerald-600' : 'text-rose-600' }} mb-1">
-                            {{ $transaction->type === 'income' ? '+' : '-' }}R$ {{ number_format($transaction->amount, 2, ',', '.') }}
-                        </div>
-                        <div class="text-sm text-slate-500">
-                            {{ $transaction->transaction_date ? \Carbon\Carbon::parse($transaction->transaction_date)->format('d/m/Y') : $transaction->created_at->format('d/m H:i') }}
-                        </div>
-                    </div>
-
-                    <!-- Observações -->
-                    @if($transaction->notes)
-                        <div class="mb-4 p-3 bg-slate-50 rounded-lg border border-slate-100">
-                            <p class="text-sm text-slate-600 leading-relaxed">{{ $transaction->notes }}</p>
-                        </div>
-                    @endif
-
-                    <!-- Ações -->
-                    <div class="flex items-center justify-between pt-4 border-t border-slate-100">
-                        <div class="flex items-center gap-1">
-                            <!-- Visualizar -->
-                            <button onclick="window.location.href='{{ route('transactions.show', $transaction->id) }}'"
-                                    class="btn-action group"
-                                    data-tooltip="Visualizar">
-                                <span class="group-hover:scale-110 transition-transform">👁️</span>
-                            </button>
-
-                            <!-- Duplicar -->
-                            <form action="{{ route('transactions.duplicate', $transaction->id) }}" method="POST" class="inline">
-                                @csrf
-                                <button type="submit"
-                                        class="btn-action group"
-                                        data-tooltip="Duplicar Transação"
-                                        data-confirm="Deseja duplicar esta transação?">
-                                    <span class="group-hover:scale-110 transition-transform">⎘</span>
-                                </button>
-                            </form>
-                        </div>
-
-                        <!-- Botão de Status (Pago/Pendente) -->
-                        <div class="flex items-center gap-1">
-                            @if($transaction->status === 'pending')
-                                <form action="{{ route('transactions.markPaid', $transaction->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit"
-                                            class="btn-action-success group"
-                                            data-tooltip="Marcar como Paga">
-                                        <span class="group-hover:scale-110 transition-transform">✅</span>
-                                    </button>
-                                </form>
-                            @else
-                                <form action="{{ route('transactions.markPending', $transaction->id) }}" method="POST" class="inline">
-                                    @csrf
-                                    <button type="submit"
-                                            class="btn-action-warning group"
-                                            data-tooltip="Marcar como Pendente">
-                                        <span class="group-hover:scale-110 transition-transform">⏳</span>
-                                    </button>
-                                </form>
-                            @endif
-                        </div>
-
-                        <div class="flex items-center gap-1">
-                            <!-- Editar -->
-                            <button onclick="window.location.href='{{ route('transactions.edit', $transaction->id) }}'"
-                                    class="btn-action group"
-                                    data-tooltip="Editar">
-                                <span class="group-hover:scale-110 transition-transform">✏️</span>
-                            </button>
-
-                            <!-- Excluir -->
-                            <form action="{{ route('transactions.destroy', $transaction->id) }}" method="POST" class="inline">
-                                @csrf
-                                @method('DELETE')
-                                <button type="submit"
-                                        class="btn-action-danger group"
-                                        data-confirm="Tem certeza que deseja excluir esta transação?">
-                                    <span class="group-hover:scale-110 transition-transform">🗑️</span>
-                                </button>
-                            </form>
-                        </div>
-                    </div>
-                </div>
+        <!-- Desktop: Grid -->
+        <div class="hidden lg:grid lg:grid-cols-2 xl:grid-cols-3 gap-6" id="transactions-grid-desktop">
+            @foreach($transactions as $transaction)
+                @include('transactions.partials.desktop-card', ['transaction' => $transaction])
             @endforeach
         </div>
 
         <!-- Empty State -->
         @if($transactions->isEmpty())
-            <div class="card p-12 text-center">
-                <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                    <span class="text-3xl">💸</span>
+            <div class="text-center py-12 lg:py-16">
+                <div class="w-20 h-20 lg:w-24 lg:h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4 lg:mb-6">
+                    <span class="text-2xl lg:text-3xl">💸</span>
                 </div>
-                <h3 class="text-lg font-semibold text-slate-700 mb-2">Nenhuma transação encontrada</h3>
-                <p class="text-slate-500 mb-4">Registre sua primeira transação</p>
-                <a href="{{ route('transactions.create') }}" class="btn-modern-primary inline-flex items-center gap-2 group">
-                    <span class="group-hover:scale-110 transition-transform duration-200">+</span>
+                <h3 class="font-semibold text-slate-700 text-lg lg:text-xl mb-2">Nenhuma transação encontrada</h3>
+                <p class="text-sm lg:text-base text-slate-500 mb-6 lg:mb-8">Registre sua primeira transação financeira</p>
+                <a href="{{ route('transactions.create') }}"
+                   class="btn-modern-primary inline-flex items-center gap-2 group">
+                    <span class="text-lg group-hover:scale-110 transition-transform duration-200">+</span>
                     <span>Nova Transação</span>
                 </a>
             </div>
@@ -277,35 +279,14 @@
 
         <!-- Paginação -->
         @if($transactions->hasPages())
-            <div class="card p-6">
+            <div class="pt-4 lg:pt-6">
                 {{ $transactions->links() }}
             </div>
         @endif
     </div>
 
     <style>
-        .transaction-card {
-            border-left: 4px solid transparent;
-            transition: all 0.3s ease;
-        }
-
-        .transaction-card[data-type="income"] {
-            border-left-color: #10b981;
-        }
-
-        .transaction-card[data-type="expense"] {
-            border-left-color: #ef4444;
-        }
-
-        .transaction-card[data-status="paid"] {
-            border-left-color: #059669;
-        }
-
-        .transaction-card[data-status="pending"] {
-            border-left-color: #f59e0b;
-        }
-
-        /* Botões Modernos */
+        /* Classes Responsivas */
         .btn-modern-primary {
             background: linear-gradient(135deg, #10b981 0%, #059669 100%);
             color: white;
@@ -314,6 +295,9 @@
             font-weight: 600;
             transition: all 0.3s ease;
             box-shadow: 0 4px 6px -1px rgba(16, 185, 129, 0.2);
+            display: inline-flex;
+            align-items: center;
+            justify-content: center;
         }
 
         .btn-modern-primary:hover {
@@ -321,185 +305,230 @@
             box-shadow: 0 8px 15px -3px rgba(16, 185, 129, 0.3);
         }
 
-        .btn-action {
-            width: 2.5rem;
-            height: 2.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.75rem;
+        .btn-modern-primary:active {
+            transform: translateY(0);
+        }
+
+        .card {
             background: white;
+            border-radius: 1rem;
             border: 1px solid #e2e8f0;
-            color: #64748b;
             transition: all 0.3s ease;
+        }
+
+        .card:hover {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1);
+        }
+
+        /* Ocultar scrollbar mas manter funcionalidade */
+        .scrollbar-hide {
+            -ms-overflow-style: none;
+            scrollbar-width: none;
+        }
+        .scrollbar-hide::-webkit-scrollbar {
+            display: none;
+        }
+
+        /* Animações */
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .transaction-item {
+            animation: fadeIn 0.3s ease-out;
             cursor: pointer;
         }
 
-        .btn-action:hover {
-            background: #f8fafc;
+        .transaction-item:hover {
             border-color: #cbd5e1;
-            color: #475569;
-            transform: translateY(-1px);
-            box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1);
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.05);
         }
 
-        .btn-action-success {
-            width: 2.5rem;
-            height: 2.5rem;
+        /* Limitador de linhas */
+        .line-clamp-2 {
+            display: -webkit-box;
+            -webkit-line-clamp: 2;
+            -webkit-box-orient: vertical;
+            overflow: hidden;
+        }
+
+        /* Estilos para a paginação responsiva */
+        .pagination {
             display: flex;
+            justify-content: center;
+            gap: 0.5rem;
+            flex-wrap: wrap;
+        }
+
+        .pagination a,
+        .pagination span {
+            display: inline-flex;
             align-items: center;
             justify-content: center;
-            border-radius: 0.75rem;
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn-action-success:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 12px -3px rgba(16, 185, 129, 0.4);
-        }
-
-        .btn-action-warning {
-            width: 2.5rem;
+            min-width: 2.5rem;
             height: 2.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+            padding: 0 0.75rem;
             border-radius: 0.75rem;
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn-action-warning:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 12px -3px rgba(245, 158, 11, 0.4);
-        }
-
-        .btn-action-danger {
-            width: 2.5rem;
-            height: 2.5rem;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            border-radius: 0.75rem;
-            background: linear-gradient(135deg, #ef4444 0%, #dc2626 100%);
-            border: none;
-            color: white;
-            transition: all 0.3s ease;
-            cursor: pointer;
-        }
-
-        .btn-action-danger:hover {
-            transform: translateY(-1px);
-            box-shadow: 0 6px 12px -3px rgba(239, 68, 68, 0.4);
-        }
-
-        /* Badges Modernas */
-        .badge-modern-info {
-            background: #e0f2fe;
-            color: #0369a1;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
+            font-size: 0.875rem;
             font-weight: 500;
-            border: 1px solid #bae6fd;
+            transition: all 0.2s ease;
         }
 
-        .badge-modern-success {
-            background: #d1fae5;
-            color: #065f46;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            border: 1px solid #a7f3d0;
-        }
-
-        .badge-modern-danger {
-            background: #fee2e2;
-            color: #991b1b;
-            padding: 0.25rem 0.75rem;
-            border-radius: 9999px;
-            font-size: 0.75rem;
-            font-weight: 500;
-            border: 1px solid #fecaca;
-        }
-
-        .badge-paid {
-            background: linear-gradient(135deg, #10b981 0%, #059669 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(5, 150, 105, 0.3);
-        }
-
-        .badge-pending {
-            background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);
-            color: white;
-            box-shadow: 0 2px 4px rgba(245, 158, 11, 0.3);
-        }
-
-        /* Input Moderno */
-        .input-modern {
-            width: 100%;
-            padding: 0.75rem 1rem;
+        .pagination a {
+            background-color: white;
             border: 1px solid #e2e8f0;
-            border-radius: 0.75rem;
-            background: white;
-            transition: all 0.3s ease;
-            box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+            color: #475569;
         }
 
-        .input-modern:focus {
-            outline: none;
+        .pagination a:hover {
+            background-color: #f8fafc;
+            border-color: #cbd5e1;
+        }
+
+        .pagination .active span {
+            background-color: #10b981;
+            color: white;
             border-color: #10b981;
-            box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
         }
 
-        .animate-pulse {
-            animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+        /* Responsividade para desktop */
+        @media (min-width: 1024px) {
+            .sticky {
+                position: sticky;
+            }
+
+            .transaction-item {
+                cursor: default;
+            }
+
+            .transaction-item:hover {
+                transform: translateY(-2px);
+            }
         }
 
-        @keyframes pulse {
-            0%, 100% {
+        /* Tooltip para desktop */
+        @media (min-width: 768px) {
+            [data-tooltip] {
+                position: relative;
+            }
+
+            [data-tooltip]:hover::after {
+                content: attr(data-tooltip);
+                position: absolute;
+                bottom: 100%;
+                left: 50%;
+                transform: translateX(-50%);
+                background-color: #1e293b;
+                color: white;
+                padding: 0.375rem 0.75rem;
+                border-radius: 0.5rem;
+                font-size: 0.75rem;
+                white-space: nowrap;
+                margin-bottom: 0.5rem;
+                z-index: 50;
+                pointer-events: none;
+            }
+        }
+
+        /* Melhorias para mobile */
+        @media (max-width: 640px) {
+            .card {
+                border-radius: 0.75rem;
+            }
+
+            #stats-scroll {
+                padding-right: 1.5rem;
+            }
+
+            /* Ajustar padding geral */
+            .space-y-6 > * {
+                margin-left: -0.5rem;
+                margin-right: -0.5rem;
+                padding-left: 0.5rem;
+                padding-right: 0.5rem;
+            }
+
+            /* Ajustar cards de transações mobile */
+            #transactions-list-mobile .transaction-item {
+                margin-left: 0;
+                margin-right: 0;
+            }
+        }
+
+        /* Suavizar transição dos filtros */
+        #filters-content {
+            transition: max-height 0.3s ease-out, opacity 0.3s ease-out;
+        }
+
+        @media (max-width: 1024px) {
+            #filters-content {
+                max-height: 0;
+                opacity: 0;
+                overflow: hidden;
+            }
+
+            #filters-content:not(.hidden) {
+                max-height: 500px;
                 opacity: 1;
             }
-            50% {
-                opacity: 0.5;
-            }
         }
 
-        /* Tooltip melhorado */
-        .tooltip {
-            font-size: 0.75rem;
-            white-space: nowrap;
+        /* Melhorar aparência do botão toggle */
+        #filters-toggle:active {
+            transform: scale(0.98);
+        }
+
+        #toggle-icon {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
     </style>
 
     <script>
         document.addEventListener('DOMContentLoaded', function() {
+            // Elementos dos filtros
             const searchInput = document.getElementById('search-input');
             const typeFilter = document.getElementById('type-filter');
             const categoryFilter = document.getElementById('category-filter');
             const statusFilter = document.getElementById('status-filter');
-            const transactionCards = document.querySelectorAll('.transaction-card');
 
+            // Configuração do scroll horizontal dos cards mobile
+            const statsScroll = document.getElementById('stats-scroll');
+            const dots = document.querySelectorAll('.lg\\:hidden.flex.justify-center.gap-1.mt-2 > div');
+
+            if (statsScroll && dots.length > 0) {
+                statsScroll.addEventListener('scroll', function() {
+                    const scrollPercentage = statsScroll.scrollLeft / (statsScroll.scrollWidth - statsScroll.clientWidth);
+                    const activeDot = Math.floor(scrollPercentage * dots.length);
+
+                    dots.forEach((dot, index) => {
+                        dot.classList.toggle('bg-emerald-400', index === activeDot);
+                        dot.classList.toggle('bg-slate-300', index !== activeDot);
+                    });
+                });
+            }
+
+            // Aplicar filtros dinâmicos
             function applyFilters() {
                 const searchValue = searchInput.value.toLowerCase();
                 const typeValue = typeFilter.value;
                 const categoryValue = categoryFilter.value;
                 const statusValue = statusFilter.value;
 
-                transactionCards.forEach(card => {
-                    const cardType = card.getAttribute('data-type');
-                    const cardCategory = card.getAttribute('data-category');
-                    const cardDescription = card.getAttribute('data-description');
-                    const cardNotes = card.getAttribute('data-notes');
-                    const cardStatus = card.getAttribute('data-status');
+                // Mobile
+                const mobileItems = document.querySelectorAll('#transactions-list-mobile .transaction-item');
+                // Desktop
+                const desktopItems = document.querySelectorAll('#transactions-grid-desktop .transaction-card');
+
+                let visibleCount = 0;
+
+                // Filtrar itens mobile
+                mobileItems.forEach(item => {
+                    const cardType = item.getAttribute('data-type');
+                    const cardCategory = item.getAttribute('data-category');
+                    const cardDescription = item.getAttribute('data-description');
+                    const cardNotes = item.getAttribute('data-notes');
+                    const cardStatus = item.getAttribute('data-status');
 
                     const typeMatch = !typeValue || cardType === typeValue;
                     const categoryMatch = !categoryValue || cardCategory === categoryValue;
@@ -508,113 +537,170 @@
                         cardDescription.includes(searchValue) ||
                         cardNotes.includes(searchValue);
 
-                    card.style.display = typeMatch && categoryMatch && statusMatch && searchMatch ? 'block' : 'none';
+                    if (typeMatch && categoryMatch && statusMatch && searchMatch) {
+                        item.style.display = 'block';
+                        item.style.animation = 'fadeIn 0.3s ease-out';
+                        visibleCount++;
+                    } else {
+                        item.style.display = 'none';
+                    }
                 });
 
-                // Verificar se há resultados
-                const visibleCards = document.querySelectorAll('.transaction-card[style="display: block"]');
-                const emptyState = document.querySelector('.empty-state');
+                // Filtrar itens desktop
+                desktopItems.forEach(item => {
+                    const cardType = item.getAttribute('data-type');
+                    const cardCategory = item.getAttribute('data-category');
+                    const cardDescription = item.getAttribute('data-description');
+                    const cardNotes = item.getAttribute('data-notes');
+                    const cardStatus = item.getAttribute('data-status');
 
-                if (visibleCards.length === 0 && !emptyState) {
-                    showEmptyState();
-                } else if (emptyState && visibleCards.length > 0) {
-                    emptyState.remove();
+                    const typeMatch = !typeValue || cardType === typeValue;
+                    const categoryMatch = !categoryValue || cardCategory === categoryValue;
+                    const statusMatch = !statusValue || cardStatus === statusValue;
+                    const searchMatch = !searchValue ||
+                        cardDescription.includes(searchValue) ||
+                        cardNotes.includes(searchValue);
+
+                    if (typeMatch && categoryMatch && statusMatch && searchMatch) {
+                        item.style.display = 'block';
+                        item.style.animation = 'fadeIn 0.3s ease-out';
+                    } else {
+                        item.style.display = 'none';
+                    }
+                });
+
+                // Atualizar contador
+                const counter = document.getElementById('results-counter');
+                if (counter) {
+                    counter.textContent = `${visibleCount} transações encontradas`;
+                }
+
+                // Mostrar/ocultar empty state para filtros
+                const existingEmptyState = document.getElementById('filter-empty-state');
+                if (visibleCount === 0 && mobileItems.length > 0 && !existingEmptyState) {
+                    showFilterEmptyState();
+                } else if (existingEmptyState && visibleCount > 0) {
+                    existingEmptyState.remove();
                 }
             }
 
-            function showEmptyState() {
-                const grid = document.getElementById('transactions-grid');
+            function showFilterEmptyState() {
+                const container = document.querySelector('.space-y-6');
                 const emptyState = document.createElement('div');
-                emptyState.className = 'empty-state col-span-full card p-12 text-center';
+                emptyState.id = 'filter-empty-state';
+                emptyState.className = 'text-center py-12 card';
                 emptyState.innerHTML = `
-            <div class="w-24 h-24 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
-                <span class="text-3xl">🔍</span>
-            </div>
-            <h3 class="text-lg font-semibold text-slate-700 mb-2">Nenhuma transação encontrada</h3>
-            <p class="text-slate-500 mb-4">Tente ajustar os filtros da sua busca</p>
-            <button onclick="clearFilters()" class="btn-modern-primary inline-flex items-center gap-2 group">
-                <span class="group-hover:scale-110 transition-transform duration-200">↶</span>
-                <span>Limpar Filtros</span>
-            </button>
-        `;
-                grid.appendChild(emptyState);
+                    <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-4">
+                        <span class="text-2xl">🔍</span>
+                    </div>
+                    <h3 class="font-semibold text-slate-700 text-lg mb-2">Nenhum resultado encontrado</h3>
+                    <p class="text-sm text-slate-500 mb-6">Tente ajustar os filtros da sua busca</p>
+                    <button onclick="clearFilters()"
+                            class="inline-flex items-center gap-2 bg-slate-100 text-slate-700 px-6 py-3 rounded-xl font-medium hover:bg-slate-200 transition-colors active:scale-95">
+                        <span class="text-lg">↶</span>
+                        <span>Limpar todos os filtros</span>
+                    </button>
+                `;
+
+                // Inserir após a lista de transações
+                const transactionsList = document.getElementById('transactions-list-mobile') ||
+                    document.getElementById('transactions-grid-desktop');
+                if (transactionsList) {
+                    transactionsList.parentNode.insertBefore(emptyState, transactionsList.nextSibling);
+                }
             }
 
-            function clearFilters() {
+            // Função para limpar filtros
+            window.clearFilters = function() {
                 searchInput.value = '';
                 typeFilter.value = '';
                 categoryFilter.value = '';
                 statusFilter.value = '';
                 applyFilters();
-            }
 
-            // Event listeners
-            searchInput.addEventListener('input', applyFilters);
+                // Foco no campo de busca
+                searchInput.focus();
+            };
+
+            // Event listeners para filtros
+            searchInput.addEventListener('input', function() {
+                clearTimeout(this.timer);
+                this.timer = setTimeout(applyFilters, 300);
+            });
+
             typeFilter.addEventListener('change', applyFilters);
             categoryFilter.addEventListener('change', applyFilters);
             statusFilter.addEventListener('change', applyFilters);
 
-            // Adicionar debounce para o input de busca
-            let searchTimeout;
-            searchInput.addEventListener('input', function() {
-                clearTimeout(searchTimeout);
-                searchTimeout = setTimeout(applyFilters, 300);
-            });
-
-            // Inicializar tooltips
-            function initTooltips() {
-                const tooltipElements = document.querySelectorAll('[data-tooltip]');
-
-                tooltipElements.forEach(element => {
-                    const tooltipText = element.getAttribute('data-tooltip');
-                    const tooltip = document.createElement('div');
-
-                    tooltip.className = 'tooltip hidden absolute z-50 px-3 py-2 text-sm text-white bg-slate-900 rounded-lg shadow-lg';
-                    tooltip.textContent = tooltipText;
-
-                    element.style.position = 'relative';
-                    element.appendChild(tooltip);
-
-                    element.addEventListener('mouseenter', () => {
-                        tooltip.classList.remove('hidden');
-                        positionTooltip(element, tooltip);
-                    });
-
-                    element.addEventListener('mouseleave', () => {
-                        tooltip.classList.add('hidden');
-                    });
-                });
+            // Inicializar contador se houver filtros ativos
+            const urlParams = new URLSearchParams(window.location.search);
+            if (urlParams.has('search') || urlParams.has('type') || urlParams.has('category') || urlParams.has('status')) {
+                applyFilters();
             }
 
-            function positionTooltip(element, tooltip) {
-                const rect = element.getBoundingClientRect();
-                tooltip.style.bottom = '100%';
-                tooltip.style.left = '50%';
-                tooltip.style.transform = 'translateX(-50%)';
-                tooltip.style.marginBottom = '8px';
-            }
+            // Controle dos filtros colapsáveis no mobile
+            const filtersToggle = document.getElementById('filters-toggle');
+            const filtersContent = document.getElementById('filters-content');
+            const toggleIcon = document.getElementById('toggle-icon');
 
-            initTooltips();
+            if (filtersToggle && filtersContent) {
+                filtersToggle.addEventListener('click', function() {
+                    const isExpanded = filtersContent.classList.contains('hidden');
 
-            // Adicionar confirmação para ações
-            document.querySelectorAll('[data-confirm]').forEach(button => {
-                button.addEventListener('click', function(e) {
-                    if (!confirm(this.getAttribute('data-confirm'))) {
-                        e.preventDefault();
+                    if (isExpanded) {
+                        // Expandir
+                        filtersContent.classList.remove('hidden');
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                        filtersToggle.classList.add('border-b', 'border-slate-200');
+                    } else {
+                        // Colapsar
+                        filtersContent.classList.add('hidden');
+                        toggleIcon.style.transform = 'rotate(0deg)';
+                        filtersToggle.classList.remove('border-b', 'border-slate-200');
                     }
                 });
+
+                // Auto-expandir se houver filtros ativos na URL
+                const urlParams = new URLSearchParams(window.location.search);
+                const hasActiveFilters = urlParams.has('search') || urlParams.has('type') ||
+                    urlParams.has('category') || urlParams.has('status');
+
+                if (hasActiveFilters && window.innerWidth < 1024) {
+                    filtersContent.classList.remove('hidden');
+                    toggleIcon.style.transform = 'rotate(180deg)';
+                    filtersToggle.classList.add('border-b', 'border-slate-200');
+                }
+            }
+
+            // Ajustar comportamento ao redimensionar a tela
+            window.addEventListener('resize', function() {
+                if (window.innerWidth >= 1024) {
+                    // Desktop - sempre mostrar
+                    if (filtersContent) {
+                        filtersContent.classList.remove('hidden');
+                        if (toggleIcon) {
+                            toggleIcon.style.transform = 'rotate(0deg)';
+                        }
+                    }
+                } else {
+                    // Mobile - verificar se estava expandido
+                    if (filtersContent && !filtersContent.classList.contains('hidden') && toggleIcon) {
+                        toggleIcon.style.transform = 'rotate(180deg)';
+                    }
+                }
             });
         });
 
-        // Adicionar função global para limpar filtros
-        window.clearFilters = function() {
-            document.getElementById('search-input').value = '';
-            document.getElementById('type-filter').value = '';
-            document.getElementById('category-filter').value = '';
-            document.getElementById('status-filter').value = '';
-
-            const event = new Event('input', { bubbles: true });
-            document.getElementById('search-input').dispatchEvent(event);
-        };
+        // Prevenir envio de formulário duplo
+        document.querySelectorAll('form').forEach(form => {
+            form.addEventListener('submit', function(e) {
+                const submitBtn = this.querySelector('button[type="submit"]');
+                if (submitBtn && !this.classList.contains('prevented')) {
+                    submitBtn.disabled = true;
+                    submitBtn.innerHTML = 'Processando...';
+                    this.classList.add('prevented');
+                }
+            });
+        });
     </script>
 @endsection
